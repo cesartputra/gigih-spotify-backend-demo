@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify</title>
+</head>
+<body>
+    <h1>Spotify</h1>
+    <br>
+
+    <h5>Song Lists</h5>
+    <div class="msg"></div>
+    <ul class="songList"></ul>
+
+    <input type="text" class="title" name="title" placeholder="Title">
+    <input type="text" class="artist" name="artist" placeholder="Artist">
+    <input type="text" class="url" name="url" placeholder="Url">
+    <button type="submit" class="submitBtn">Add Song</button>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
+    <script>
+        const baseUrl = 'http://localhost:3000';
+        const getSongs = async (title=null) => {
+            // $('.songList').append('Loading...');
+            $('.msg').empty();
+            $('.songList').empty();
+            let url = `${baseUrl}/songs`;
+            const songsResponse = await fetch(url);
+            const songs = await songsResponse.json();
+            const songsElements = songs.map((song) => {
+                return `<li>${song.title} by ${song.artist} <button onclick="playSong(${song.id})">Play</button></li>`;
+            });
+            
+            // $('.songList').innerHTML = usersElements.join('');
+            $('.songList').append(songsElements)
+        };
+        getSongs()
+
+        const addSong = async (req, res) => {
+            const title = $('.title').val();
+            const artist = $('.artist').val();
+            const url = $('.url').val();
+            const songResponse = await fetch(`${baseUrl}/songs`, {
+                headers: new Headers({
+                    'content-type': 'application/json'
+                    }),
+                    method: 'POST',
+                    body: JSON.stringify({
+                    title,
+                    artist,
+                    url
+                }),
+            });
+            const song = await songResponse.json();
+            getSongs()
+        }
+
+        const playSong = async(id) => {
+            const songDetailResponse = await fetch(`${baseUrl}/songs/${id}`);
+            console.log(songDetailResponse.json())
+            if (songDetailResponse.status == 'failed') {
+                $('.msg').append(`<h4>${songDetailResponse.text}</h4>`);
+            } else {
+                $('.msg').append(`<h4>${songDetailResponse.song} by ${songDetailResponse.song} played</h4>`);
+            }
+            
+        }
+
+        $('.submitBtn').on('click', function () {
+            addSong()
+        });
+    </script>
+</body>
+</html>
